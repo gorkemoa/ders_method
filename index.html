@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Günlük Soru Takibi</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Günlük Soru Takibi</h1>
+      <div class="header-right">
+        <span id="today"></span>
+        <div id="authArea" class="auth-area">
+          <span id="whoami" class="whoami"></span>
+          <button id="btnLogin" class="btn btn-primary">Giriş</button>
+          <button id="btnLogout" class="btn btn-ghost" style="display:none">Çıkış</button>
+        </div>
+        <button id="resetAll" class="btn btn-ghost" title="Tüm değerleri sıfırla">Sıfırla</button>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="cards" id="cards">
+        <!-- Kartlar JS ile doldurulacak -->
+      </section>
+
+      <section class="summary">
+        <div class="total">
+          <span>Toplam</span>
+          <strong id="total">0</strong>
+          <span>soru</span>
+        </div>
+        <div class="actions">
+          <button id="save" class="btn btn-primary">Kaydet</button>
+        </div>
+      </section>
+
+      <section class="notes">
+        <label for="note">Günlük Düşünce</label>
+        <textarea id="note" rows="4" placeholder="Bugünkü deneyimlerinizi yazın..."></textarea>
+      </section>
+
+      <section class="history">
+        <h2>Son Kayıtlar</h2>
+        <div id="historyList" class="history-list"></div>
+      </section>
+    </main>
+
+    <!-- Auth Modal -->
+    <dialog id="authDialog" class="dialog">
+      <form method="dialog" class="auth-forms" id="authForms">
+        <h3>Hesap</h3>
+        <div class="tabs">
+          <button type="button" class="tab active" data-tab="login">Giriş</button>
+          <button type="button" class="tab" data-tab="register">Kayıt Ol</button>
+        </div>
+        <div class="tab-panel" data-panel="login">
+          <input type="email" id="loginEmail" placeholder="E-posta" required>
+          <input type="password" id="loginPassword" placeholder="Şifre" required>
+          <button id="doLogin" class="btn btn-primary" type="submit">Giriş Yap</button>
+        </div>
+        <div class="tab-panel" data-panel="register" style="display:none">
+          <input type="text" id="regName" placeholder="Ad Soyad" required>
+          <input type="email" id="regEmail" placeholder="E-posta" required>
+          <input type="password" id="regPassword" placeholder="Şifre (min 6)" minlength="6" required>
+          <button id="doRegister" class="btn btn-primary" type="submit">Kayıt Ol</button>
+        </div>
+        <button class="btn btn-ghost" value="cancel">Kapat</button>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+  </html>
+
+
