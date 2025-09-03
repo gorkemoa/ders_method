@@ -1,8 +1,9 @@
 const express = require('express');
-const mysql = require('mysql2/promise');
+const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -14,59 +15,57 @@ app.use(express.json());
 app.use(express.static('.'));
 
 // Database connection
-const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'ders_method',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-};
-
-let pool;
+let db;
 
 async function initDatabase() {
   try {
-    // Create database if not exists
-    const tempConnection = await mysql.createConnection({
-      host: dbConfig.host,
-      user: dbConfig.user,
-      password: dbConfig.password
+    // Create SQLite database
+    db = new sqlite3.Database('./database.sqlite', (err) => {
+      if (err) {
+        console.error('Error opening database:', err);
+        process.exit(1);
+      }
     });
-    
-    await tempConnection.execute(`CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`);
-    await tempConnection.end();
-
-    // Create connection pool
-    pool = mysql.createPool(dbConfig);
 
     // Create tables
-    await pool.execute(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+    await new Promise((resolve, reject) => {
+      db.serialize(() => {
+        // Users table
+        db.run(`
+          CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
 
-    await pool.execute(`
-      CREATE TABLE IF NOT EXISTS daily_entries (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        date DATE NOT NULL,
-        counts JSON NOT NULL,
-        note TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY unique_user_date (user_id, date),
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      )
-    `);
+        // Daily entries table
+        db.run(`
+          CREATE TABLE IF NOT EXISTS daily_entries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            counts TEXT NOT NULL,
+            note TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, date),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          )
+        `, (err) => {
+          if (err) {
+            console.error('Error creating tables:', err);
+            reject(err);
+          } else {
+            console.log('Database initialized successfully');
+            resolve();
+          }
+        });
+      });
+    });
 
-    console.log('Database initialized successfully');
   } catch (error) {
     console.error('Database initialization failed:', error);
     process.exit(1);
@@ -91,6 +90,34 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Helper function for database queries
+const dbGet = (sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+};
+
+const dbAll = (sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+};
+
+const dbRun = (sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function(err) {
+      if (err) reject(err);
+      else resolve({ id: this.lastID, changes: this.changes });
+    });
+  });
+};
+
 // Routes
 
 // Register
@@ -107,12 +134,9 @@ app.post('/api/register', async (req, res) => {
     }
 
     // Check if user exists
-    const [existingUsers] = await pool.execute(
-      'SELECT id FROM users WHERE email = ?',
-      [email]
-    );
+    const existingUser = await dbGet('SELECT id FROM users WHERE email = ?', [email]);
 
-    if (existingUsers.length > 0) {
+    if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
     }
 
@@ -120,14 +144,14 @@ app.post('/api/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
-    const [result] = await pool.execute(
+    const result = await dbRun(
       'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
       [name, email, hashedPassword]
     );
 
     // Generate JWT
     const token = jwt.sign(
-      { id: result.insertId, email },
+      { id: result.id, email },
       process.env.JWT_SECRET || 'fallback_secret',
       { expiresIn: '30d' }
     );
@@ -135,7 +159,7 @@ app.post('/api/register', async (req, res) => {
     res.json({
       message: 'User created successfully',
       token,
-      user: { id: result.insertId, name, email }
+      user: { id: result.id, name, email }
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -153,16 +177,14 @@ app.post('/api/login', async (req, res) => {
     }
 
     // Find user
-    const [users] = await pool.execute(
+    const user = await dbGet(
       'SELECT id, name, email, password FROM users WHERE email = ?',
       [email]
     );
 
-    if (users.length === 0) {
+    if (!user) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
-
-    const user = users[0];
 
     // Check password
     const validPassword = await bcrypt.compare(password, user.password);
@@ -193,13 +215,16 @@ app.get('/api/daily-entry', authenticateToken, async (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0];
     
-    const [entries] = await pool.execute(
+    const entry = await dbGet(
       'SELECT * FROM daily_entries WHERE user_id = ? AND date = ?',
       [req.user.id, today]
     );
 
-    if (entries.length > 0) {
-      res.json(entries[0]);
+    if (entry) {
+      res.json({
+        counts: JSON.parse(entry.counts),
+        note: entry.note || ''
+      });
     } else {
       res.json({ counts: {}, note: '' });
     }
@@ -220,20 +245,20 @@ app.post('/api/daily-entry', authenticateToken, async (req, res) => {
     }
 
     // Check if entry exists
-    const [existingEntries] = await pool.execute(
+    const existingEntry = await dbGet(
       'SELECT id FROM daily_entries WHERE user_id = ? AND date = ?',
       [req.user.id, today]
     );
 
-    if (existingEntries.length > 0) {
+    if (existingEntry) {
       // Update existing entry
-      await pool.execute(
+      await dbRun(
         'UPDATE daily_entries SET counts = ?, note = ? WHERE user_id = ? AND date = ?',
         [JSON.stringify(counts), note || '', req.user.id, today]
       );
     } else {
       // Create new entry
-      await pool.execute(
+      await dbRun(
         'INSERT INTO daily_entries (user_id, date, counts, note) VALUES (?, ?, ?, ?)',
         [req.user.id, today, JSON.stringify(counts), note || '']
       );
@@ -249,7 +274,7 @@ app.post('/api/daily-entry', authenticateToken, async (req, res) => {
 // Get history
 app.get('/api/history', authenticateToken, async (req, res) => {
   try {
-    const [entries] = await pool.execute(
+    const entries = await dbAll(
       'SELECT date, counts, note FROM daily_entries WHERE user_id = ? ORDER BY date DESC LIMIT 10',
       [req.user.id]
     );

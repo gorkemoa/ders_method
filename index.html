@@ -11,44 +11,167 @@
   </head>
   <body>
     <header class="app-header">
-      <h1>Günlük Soru Takibi</h1>
+      <h1>📚 Günlük Soru Takibi</h1>
       <div class="header-right">
-        <span id="today"></span>
+        <span id="today" class="today-date"></span>
+        <button id="themeToggle" class="theme-toggle" title="Tema değiştir" aria-label="Tema değiştir">
+          <span id="themeIcon">🌙</span>
+        </button>
         <div id="authArea" class="auth-area">
           <span id="whoami" class="whoami"></span>
           <button id="btnLogin" class="btn btn-primary">Giriş</button>
           <button id="btnLogout" class="btn btn-ghost" style="display:none">Çıkış</button>
         </div>
-        <button id="resetAll" class="btn btn-ghost" title="Tüm değerleri sıfırla">Sıfırla</button>
+        <button id="resetAll" class="btn btn-ghost" title="Tüm değerleri sıfırla" aria-label="Tüm değerleri sıfırla">
+          <span>🔄</span> Sıfırla
+        </button>
       </div>
     </header>
 
-    <main class="container">
-      <section class="cards" id="cards">
+    <main class="container" role="main">
+      <section class="cards" id="cards" role="region" aria-label="Ders konuları">
         <!-- Kartlar JS ile doldurulacak -->
       </section>
 
-      <section class="summary">
-        <div class="total">
-          <span>Toplam</span>
-          <strong id="total">0</strong>
-          <span>soru</span>
+      <section class="summary" role="region" aria-label="Günlük özet">
+        <div class="summary-content">
+          <div class="total">
+            <span class="total-label">Toplam</span>
+            <strong id="total" class="total-value" aria-live="polite">0</strong>
+            <span class="total-unit">soru</span>
+          </div>
+          <div class="progress-info">
+            <div class="daily-goal">
+              <span class="goal-label">Günlük Hedef</span>
+              <div class="goal-controls">
+                <span class="goal-value" id="dailyGoal" aria-label="Günlük hedef">50</span>
+                <button id="editGoal" class="btn btn-ghost btn-sm" title="Hedefi düzenle" aria-label="Günlük hedefi düzenle">
+                  <span>⚙️</span>
+                </button>
+              </div>
+            </div>
+            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Günlük hedef ilerlemesi">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+          </div>
         </div>
         <div class="actions">
-          <button id="save" class="btn btn-primary">Kaydet</button>
+          <button id="save" class="btn btn-primary" aria-label="Günlük verileri kaydet">
+            <span aria-hidden="true">💾</span> Kaydet
+          </button>
         </div>
       </section>
 
-      <section class="notes">
+      <section class="notes" role="region" aria-label="Günlük notlar">
         <label for="note">Günlük Düşünce</label>
-        <textarea id="note" rows="4" placeholder="Bugünkü deneyimlerinizi yazın..."></textarea>
+        <textarea id="note" rows="4" placeholder="Bugünkü deneyimlerinizi yazın..." aria-describedby="note-help"></textarea>
+        <div id="note-help" class="sr-only">Günlük çalışma deneyimlerinizi ve düşüncelerinizi buraya yazabilirsiniz.</div>
       </section>
 
-      <section class="history">
-        <h2>Son Kayıtlar</h2>
-        <div id="historyList" class="history-list"></div>
+      <section class="history" role="region" aria-label="Geçmiş kayıtlar">
+        <h2>📚 Tüm Kayıtlarım (Sıfırlanmaz)</h2>
+        <div id="historyList" class="history-list" role="list" aria-label="Geçmiş günlük kayıtları"></div>
+      </section>
+
+      <section class="statistics" role="region" aria-label="İstatistikler">
+        <h2>📈 Detaylı İstatistikler</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-content">
+              <div class="stat-value" id="weeklyTotal">0</div>
+              <div class="stat-label">Bu Hafta</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-content">
+              <div class="stat-value" id="averageDaily">0</div>
+              <div class="stat-label">Günlük Ortalama</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-content">
+              <div class="stat-value" id="streakDays">0</div>
+              <div class="stat-label">Gün Serisi</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-content">
+              <div class="stat-value" id="bestDay">0</div>
+              <div class="stat-label">En İyi Gün</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-content">
+              <div class="stat-value" id="totalDays">0</div>
+              <div class="stat-label">Toplam Gün</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🎓</div>
+            <div class="stat-content">
+              <div class="stat-value" id="totalQuestions">0</div>
+              <div class="stat-label">Toplam Soru</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div class="stat-content">
+              <div class="stat-value" id="goalAchievement">0%</div>
+              <div class="stat-label">Hedef Başarı</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-content">
+              <div class="stat-value" id="favoriteSubject">-</div>
+              <div class="stat-label">Favori Konu</div>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
+
+    <!-- Record Details Modal -->
+    <dialog id="recordDialog" class="dialog">
+      <div class="record-details">
+        <h3>📊 Kayıt Detayları</h3>
+        <div class="record-info">
+          <div class="record-date" id="recordDate"></div>
+          <div class="record-summary" id="recordSummary"></div>
+        </div>
+        <div class="record-subjects" id="recordSubjects"></div>
+        <div class="record-note" id="recordNote"></div>
+        <div class="record-actions">
+          <button id="closeRecord" class="btn btn-primary">Kapat</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Goal Edit Modal -->
+    <dialog id="goalDialog" class="dialog">
+      <form method="dialog" class="goal-form">
+        <h3>🎯 Günlük Hedef Ayarla</h3>
+        <div class="form-group">
+          <label for="goalInput">Günlük Hedef (Soru Sayısı)</label>
+          <input type="number" id="goalInput" min="1" max="1000" value="50" required>
+          <div class="goal-suggestions">
+            <button type="button" class="suggestion-btn" data-goal="25">25</button>
+            <button type="button" class="suggestion-btn" data-goal="50">50</button>
+            <button type="button" class="suggestion-btn" data-goal="75">75</button>
+            <button type="button" class="suggestion-btn" data-goal="100">100</button>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+          <button type="button" class="btn btn-ghost" value="cancel">İptal</button>
+        </div>
+      </form>
+    </dialog>
 
     <!-- Auth Modal -->
     <dialog id="authDialog" class="dialog">
@@ -59,14 +182,14 @@
           <button type="button" class="tab" data-tab="register">Kayıt Ol</button>
         </div>
         <div class="tab-panel" data-panel="login">
-          <input type="email" id="loginEmail" placeholder="E-posta" required>
-          <input type="password" id="loginPassword" placeholder="Şifre" required>
+          <input type="email" id="loginEmail" name="loginEmail" placeholder="E-posta">
+          <input type="password" id="loginPassword" name="loginPassword" placeholder="Şifre">
           <button id="doLogin" class="btn btn-primary" type="submit">Giriş Yap</button>
         </div>
         <div class="tab-panel" data-panel="register" style="display:none">
-          <input type="text" id="regName" placeholder="Ad Soyad" required>
-          <input type="email" id="regEmail" placeholder="E-posta" required>
-          <input type="password" id="regPassword" placeholder="Şifre (min 6)" minlength="6" required>
+          <input type="text" id="regName" name="regName" placeholder="Ad Soyad">
+          <input type="email" id="regEmail" name="regEmail" placeholder="E-posta">
+          <input type="password" id="regPassword" name="regPassword" placeholder="Şifre (min 6)">
           <button id="doRegister" class="btn btn-primary" type="submit">Kayıt Ol</button>
         </div>
         <button class="btn btn-ghost" value="cancel">Kapat</button>
