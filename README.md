@@ -1,89 +1,164 @@
-# Ders Method - Günlük Soru Takip Uygulaması
+# YKS Deneme Takip Sistemi
 
-Öğrencilerin günlük soru çözme alışkanlıklarını takip etmelerini sağlayan web uygulaması.
+Firebase ile entegre edilmiş, modern ve kullanıcı dostu YKS sınav deneme takip sistemi.
 
-## Özellikler
+## 🚀 Özellikler
 
-- **6 Ders Kartı**: Paragraf, Matematik, Geometri, Fizik, Kimya, Biyoloji
-- **Günlük Takip**: Her ders için soru sayısı artırma/azaltma
-- **Kullanıcı Sistemi**: Kayıt olma ve giriş yapma
-- **Veri Saklama**: MySQL veritabanında kalıcı saklama
-- **Geçmiş**: Son 10 günün kayıtlarını görüntüleme
-- **Günlük Notlar**: Her gün için düşünce notları
+- **Kullanıcı Kimlik Doğrulama**: Firebase Authentication ile güvenli giriş/kayıt
+- **Deneme Yönetimi**: TYT ve AYT denemelerini ekleme, düzenleme, silme
+- **İstatistikler**: Toplam deneme sayısı, ortalama puan, en iyi puan
+- **Grafik Görünümü**: İlerleme grafiği ile performans takibi
+- **Filtreleme ve Sıralama**: Denemeleri tarih, puan veya isme göre sıralama
+- **Responsive Tasarım**: Mobil ve masaüstü uyumlu modern arayüz
+- **Gerçek Zamanlı Veri**: Firebase Firestore ile anlık veri senkronizasyonu
 
-## Teknolojiler
+## 🛠️ Kurulum
 
-- **Frontend**: HTML, CSS, JavaScript (Vanilla)
-- **Backend**: Node.js, Express.js
-- **Veritabanı**: MySQL
-- **Kimlik Doğrulama**: JWT
-- **Deploy**: Render.com
+### 1. Proje Dosyalarını İndirin
+```bash
+git clone [repository-url]
+cd yks-deneme-takip
+```
 
-## Yerel Kurulum
+### 2. Bağımlılıkları Yükleyin
+```bash
+npm install
+```
 
-1. **Bağımlılıkları yükleyin:**
-   ```bash
-   npm install
-   ```
+### 3. Firebase Projesi Oluşturun
 
-2. **MySQL veritabanı oluşturun:**
-   ```sql
-   CREATE DATABASE ders_method;
-   ```
+1. [Firebase Console](https://console.firebase.google.com/)'a gidin
+2. "Create a project" ile yeni proje oluşturun
+3. Authentication'ı etkinleştirin (Email/Password)
+4. Firestore Database'i oluşturun (Test mode)
+5. Project Settings > General > Your apps bölümünden Web app ekleyin
 
-3. **Çevre değişkenlerini ayarlayın:**
-   ```bash
-   cp env.example .env
-   # .env dosyasını düzenleyin
-   ```
+### 4. Firebase Konfigürasyonu
 
-4. **Sunucuyu başlatın:**
-   ```bash
-   npm start
-   # veya geliştirme için:
-   npm run dev
-   ```
+`firebase-config.js` dosyasındaki konfigürasyon bilgilerini güncelleyin:
 
-5. **Tarayıcıda açın:**
-   ```
-   http://localhost:3000
-   ```
+```javascript
+const firebaseConfig = {
+    apiKey: "your-api-key-here",
+    authDomain: "your-project-id.firebaseapp.com",
+    projectId: "your-project-id",
+    storageBucket: "your-project-id.appspot.com",
+    messagingSenderId: "your-sender-id",
+    appId: "your-app-id"
+};
+```
 
-## Render.com Deploy
+### 5. Uygulamayı Başlatın
+```bash
+npm start
+```
 
-1. GitHub'a push edin
-2. Render.com'da yeni Web Service oluşturun
-3. GitHub repo'yu bağlayın
-4. `render.yaml` dosyası otomatik olarak ayarları yapacak
-5. MySQL veritabanı otomatik oluşturulacak
+Veya geliştirme modu için:
+```bash
+npm run dev
+```
 
-## API Endpoints
+Uygulama `http://localhost:3000` adresinde çalışacaktır.
 
-- `POST /api/register` - Kullanıcı kaydı
-- `POST /api/login` - Giriş yapma
-- `GET /api/daily-entry` - Günlük kayıt getirme
-- `POST /api/daily-entry` - Günlük kayıt kaydetme
-- `GET /api/history` - Geçmiş kayıtları getirme
-- `GET /api/health` - Sağlık kontrolü
+## 📱 Kullanım
 
-## Veritabanı Şeması
+### Kayıt Olma
+1. "Kayıt Ol" sekmesine tıklayın
+2. E-posta ve şifre bilgilerinizi girin
+3. "Kayıt Ol" butonuna tıklayın
 
-### users
-- `id` (INT, PRIMARY KEY)
-- `name` (VARCHAR)
-- `email` (VARCHAR, UNIQUE)
-- `password` (VARCHAR, HASHED)
-- `created_at` (TIMESTAMP)
+### Deneme Ekleme
+1. Giriş yaptıktan sonra "Yeni Deneme Ekle" bölümünü kullanın
+2. Deneme adı, tarih ve puan bilgilerini girin
+3. İsteğe bağlı notlar ekleyebilirsiniz
+4. "Deneme Ekle" butonuna tıklayın
 
-### daily_entries
-- `id` (INT, PRIMARY KEY)
-- `user_id` (INT, FOREIGN KEY)
-- `date` (DATE)
-- `counts` (JSON)
-- `note` (TEXT)
-- `created_at` (TIMESTAMP)
-- `updated_at` (TIMESTAMP)
+### Deneme Yönetimi
+- **Düzenleme**: Deneme kartındaki "Düzenle" butonuna tıklayın
+- **Silme**: "Sil" butonuna tıklayıp onaylayın
+- **Filtreleme**: Üst kısımdaki filtre seçeneklerini kullanın
+- **Sıralama**: Sıralama seçeneklerini değiştirin
 
-## Lisans
+### İstatistikler
+- Ana sayfada toplam deneme sayısı, ortalama puan, en iyi puan görüntülenir
+- İlerleme grafiği ile performansınızı takip edebilirsiniz
 
-MIT
+## 🗂️ Veri Yapısı
+
+### Firestore Koleksiyonu: `exams`
+
+```javascript
+{
+    userId: "string",           // Kullanıcı ID'si
+    examName: "string",         // Deneme adı
+    examDate: "string",         // Tarih (YYYY-MM-DD)
+    tytScore: number,           // TYT puanı (0-500)
+    aytScore: number,           // AYT puanı (0-500)
+    totalScore: number,         // Toplam puan (0-1000)
+    examNotes: "string",        // Notlar
+    createdAt: timestamp,       // Oluşturulma tarihi
+    updatedAt: timestamp        // Güncellenme tarihi
+}
+```
+
+## 🔧 Geliştirme
+
+### Proje Yapısı
+```
+yks-deneme-takip/
+├── index.html              # Ana HTML dosyası
+├── styles.css              # CSS stilleri
+├── app.js                  # Ana JavaScript dosyası
+├── firebase-config.js      # Firebase konfigürasyonu
+├── package.json            # Proje bağımlılıkları
+└── README.md              # Bu dosya
+```
+
+### Teknolojiler
+- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
+- **Backend**: Firebase (Authentication + Firestore)
+- **Charts**: Chart.js
+- **Icons**: Font Awesome
+- **Styling**: Modern CSS Grid/Flexbox
+
+## 🚀 Deployment
+
+### Firebase Hosting (Önerilen)
+```bash
+npm install -g firebase-tools
+firebase login
+firebase init hosting
+firebase deploy
+```
+
+### Diğer Platformlar
+- Netlify
+- Vercel
+- GitHub Pages
+
+## 📝 Lisans
+
+MIT License - Detaylar için LICENSE dosyasına bakın.
+
+## 🤝 Katkıda Bulunma
+
+1. Fork yapın
+2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
+3. Commit yapın (`git commit -m 'Add amazing feature'`)
+4. Push yapın (`git push origin feature/amazing-feature`)
+5. Pull Request oluşturun
+
+## 📞 Destek
+
+Herhangi bir sorun yaşarsanız:
+- GitHub Issues bölümünü kullanın
+- E-posta: [your-email@example.com]
+
+## 🔮 Gelecek Özellikler
+
+- [ ] Deneme PDF'lerini yükleme
+- [ ] Detaylı analiz raporları
+- [ ] Hedef belirleme sistemi
+- [ ] Sosyal özellikler (arkadaşlarla karşılaştırma)
+- [ ] Mobil uygulama (React Native)
+- [ ] Offline çalışma desteği

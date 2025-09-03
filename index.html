@@ -1,204 +1,195 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Günlük Soru Takibi</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YKS Deneme Takip Sistemi</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <header class="app-header">
-      <h1>📚 Günlük Soru Takibi</h1>
-      <div class="header-right">
-        <span id="today" class="today-date"></span>
-        <button id="themeToggle" class="theme-toggle" title="Tema değiştir" aria-label="Tema değiştir">
-          <span id="themeIcon">🌙</span>
-        </button>
-        <div id="authArea" class="auth-area">
-          <span id="whoami" class="whoami"></span>
-          <button id="btnLogin" class="btn btn-primary">Giriş</button>
-          <button id="btnLogout" class="btn btn-ghost" style="display:none">Çıkış</button>
-        </div>
-        <button id="resetAll" class="btn btn-ghost" title="Tüm değerleri sıfırla" aria-label="Tüm değerleri sıfırla">
-          <span>🔄</span> Sıfırla
-        </button>
-      </div>
-    </header>
-
-    <main class="container" role="main">
-      <section class="cards" id="cards" role="region" aria-label="Ders konuları">
-        <!-- Kartlar JS ile doldurulacak -->
-      </section>
-
-      <section class="summary" role="region" aria-label="Günlük özet">
-        <div class="summary-content">
-          <div class="total">
-            <span class="total-label">Toplam</span>
-            <strong id="total" class="total-value" aria-live="polite">0</strong>
-            <span class="total-unit">soru</span>
-          </div>
-          <div class="progress-info">
-            <div class="daily-goal">
-              <span class="goal-label">Günlük Hedef</span>
-              <div class="goal-controls">
-                <span class="goal-value" id="dailyGoal" aria-label="Günlük hedef">50</span>
-                <button id="editGoal" class="btn btn-ghost btn-sm" title="Hedefi düzenle" aria-label="Günlük hedefi düzenle">
-                  <span>⚙️</span>
-                </button>
-              </div>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="firebase-config.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <h1><i class="fas fa-graduation-cap"></i> YKS Deneme Takip</h1>
+                <div class="user-info" id="userInfo" style="display: none;">
+                    <span id="userEmail"></span>
+                    <button id="logoutBtn" class="btn btn-outline">Çıkış Yap</button>
+                </div>
             </div>
-            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Günlük hedef ilerlemesi">
-              <div class="progress-fill" id="progressFill"></div>
-            </div>
-          </div>
-        </div>
-        <div class="actions">
-          <button id="save" class="btn btn-primary" aria-label="Günlük verileri kaydet">
-            <span aria-hidden="true">💾</span> Kaydet
-          </button>
-        </div>
-      </section>
+        </header>
 
-      <section class="notes" role="region" aria-label="Günlük notlar">
-        <label for="note">Günlük Düşünce</label>
-        <textarea id="note" rows="4" placeholder="Bugünkü deneyimlerinizi yazın..." aria-describedby="note-help"></textarea>
-        <div id="note-help" class="sr-only">Günlük çalışma deneyimlerinizi ve düşüncelerinizi buraya yazabilirsiniz.</div>
-      </section>
+        <!-- Auth Section -->
+        <div id="authSection" class="auth-section">
+            <div class="auth-container">
+                <div class="auth-tabs">
+                    <button class="tab-btn active" data-tab="login">Giriş Yap</button>
+                    <button class="tab-btn" data-tab="register">Kayıt Ol</button>
+                </div>
+                
+                <div id="loginForm" class="auth-form active">
+                    <h2>Giriş Yap</h2>
+                    <form id="loginFormElement">
+                        <div class="form-group">
+                            <label for="loginEmail">E-posta</label>
+                            <input type="email" id="loginEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Şifre</label>
+                            <input type="password" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Giriş Yap</button>
+                    </form>
+                </div>
 
-      <section class="history" role="region" aria-label="Geçmiş kayıtlar">
-        <h2>📚 Tüm Kayıtlarım (Sıfırlanmaz)</h2>
-        <div id="historyList" class="history-list" role="list" aria-label="Geçmiş günlük kayıtları"></div>
-      </section>
+                <div id="registerForm" class="auth-form">
+                    <h2>Kayıt Ol</h2>
+                    <form id="registerFormElement">
+                        <div class="form-group">
+                            <label for="registerEmail">E-posta</label>
+                            <input type="email" id="registerEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">Şifre</label>
+                            <input type="password" id="registerPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPasswordConfirm">Şifre Tekrar</label>
+                            <input type="password" id="registerPasswordConfirm" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Kayıt Ol</button>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-      <section class="statistics" role="region" aria-label="İstatistikler">
-        <h2>📈 Detaylı İstatistikler</h2>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon">🎯</div>
-            <div class="stat-content">
-              <div class="stat-value" id="weeklyTotal">0</div>
-              <div class="stat-label">Bu Hafta</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">📅</div>
-            <div class="stat-content">
-              <div class="stat-value" id="averageDaily">0</div>
-              <div class="stat-label">Günlük Ortalama</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">🔥</div>
-            <div class="stat-content">
-              <div class="stat-value" id="streakDays">0</div>
-              <div class="stat-label">Gün Serisi</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">⭐</div>
-            <div class="stat-content">
-              <div class="stat-value" id="bestDay">0</div>
-              <div class="stat-label">En İyi Gün</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">📊</div>
-            <div class="stat-content">
-              <div class="stat-value" id="totalDays">0</div>
-              <div class="stat-label">Toplam Gün</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">🎓</div>
-            <div class="stat-content">
-              <div class="stat-value" id="totalQuestions">0</div>
-              <div class="stat-label">Toplam Soru</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">📈</div>
-            <div class="stat-content">
-              <div class="stat-value" id="goalAchievement">0%</div>
-              <div class="stat-label">Hedef Başarı</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">🏆</div>
-            <div class="stat-content">
-              <div class="stat-value" id="favoriteSubject">-</div>
-              <div class="stat-label">Favori Konu</div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
+        <!-- Main App -->
+        <div id="mainApp" class="main-app" style="display: none;">
+            <div class="container">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalExams">0</h3>
+                            <p>Toplam Deneme</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="averageScore">0</h3>
+                            <p>Ortalama Puan</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-target"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="bestScore">0</h3>
+                            <p>En İyi Puan</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="lastExam">-</h3>
+                            <p>Son Deneme</p>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Record Details Modal -->
-    <dialog id="recordDialog" class="dialog">
-      <div class="record-details">
-        <h3>📊 Kayıt Detayları</h3>
-        <div class="record-info">
-          <div class="record-date" id="recordDate"></div>
-          <div class="record-summary" id="recordSummary"></div>
-        </div>
-        <div class="record-subjects" id="recordSubjects"></div>
-        <div class="record-note" id="recordNote"></div>
-        <div class="record-actions">
-          <button id="closeRecord" class="btn btn-primary">Kapat</button>
-        </div>
-      </div>
-    </dialog>
+                <!-- Add Exam Form -->
+                <div class="add-exam-section">
+                    <h2><i class="fas fa-plus-circle"></i> Yeni Deneme Ekle</h2>
+                    <form id="addExamForm" class="exam-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="examName">Deneme Adı</label>
+                                <input type="text" id="examName" placeholder="Örn: TYT Deneme 1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="examDate">Tarih</label>
+                                <input type="date" id="examDate" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tytScore">TYT Puanı</label>
+                                <input type="number" id="tytScore" min="0" max="500" placeholder="0-500">
+                            </div>
+                            <div class="form-group">
+                                <label for="aytScore">AYT Puanı</label>
+                                <input type="number" id="aytScore" min="0" max="500" placeholder="0-500">
+                            </div>
+                            <div class="form-group">
+                                <label for="totalScore">Toplam Puan</label>
+                                <input type="number" id="totalScore" min="0" max="1000" placeholder="0-1000">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="examNotes">Notlar</label>
+                            <textarea id="examNotes" placeholder="Deneme hakkında notlarınız..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Deneme Ekle
+                        </button>
+                    </form>
+                </div>
 
-    <!-- Goal Edit Modal -->
-    <dialog id="goalDialog" class="dialog">
-      <form method="dialog" class="goal-form">
-        <h3>🎯 Günlük Hedef Ayarla</h3>
-        <div class="form-group">
-          <label for="goalInput">Günlük Hedef (Soru Sayısı)</label>
-          <input type="number" id="goalInput" min="1" max="1000" value="50" required>
-          <div class="goal-suggestions">
-            <button type="button" class="suggestion-btn" data-goal="25">25</button>
-            <button type="button" class="suggestion-btn" data-goal="50">50</button>
-            <button type="button" class="suggestion-btn" data-goal="75">75</button>
-            <button type="button" class="suggestion-btn" data-goal="100">100</button>
-          </div>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">Kaydet</button>
-          <button type="button" class="btn btn-ghost" value="cancel">İptal</button>
-        </div>
-      </form>
-    </dialog>
+                <!-- Exams List -->
+                <div class="exams-section">
+                    <h2><i class="fas fa-list"></i> Deneme Geçmişi</h2>
+                    <div class="exams-filters">
+                        <select id="sortBy" class="filter-select">
+                            <option value="date">Tarihe Göre</option>
+                            <option value="score">Puana Göre</option>
+                            <option value="name">İsme Göre</option>
+                        </select>
+                        <select id="filterBy" class="filter-select">
+                            <option value="all">Tümü</option>
+                            <option value="tyt">Sadece TYT</option>
+                            <option value="ayt">Sadece AYT</option>
+                            <option value="both">TYT + AYT</option>
+                        </select>
+                    </div>
+                    <div id="examsList" class="exams-list">
+                        <!-- Exams will be loaded here -->
+                    </div>
+                </div>
 
-    <!-- Auth Modal -->
-    <dialog id="authDialog" class="dialog">
-      <form method="dialog" class="auth-forms" id="authForms">
-        <h3>Hesap</h3>
-        <div class="tabs">
-          <button type="button" class="tab active" data-tab="login">Giriş</button>
-          <button type="button" class="tab" data-tab="register">Kayıt Ol</button>
+                <!-- Chart Section -->
+                <div class="chart-section">
+                    <h2><i class="fas fa-chart-area"></i> İlerleme Grafiği</h2>
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="tab-panel" data-panel="login">
-          <input type="email" id="loginEmail" name="loginEmail" placeholder="E-posta">
-          <input type="password" id="loginPassword" name="loginPassword" placeholder="Şifre">
-          <button id="doLogin" class="btn btn-primary" type="submit">Giriş Yap</button>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Yükleniyor...</p>
         </div>
-        <div class="tab-panel" data-panel="register" style="display:none">
-          <input type="text" id="regName" name="regName" placeholder="Ad Soyad">
-          <input type="email" id="regEmail" name="regEmail" placeholder="E-posta">
-          <input type="password" id="regPassword" name="regPassword" placeholder="Şifre (min 6)">
-          <button id="doRegister" class="btn btn-primary" type="submit">Kayıt Ol</button>
-        </div>
-        <button class="btn btn-ghost" value="cancel">Kapat</button>
-      </form>
-    </dialog>
+    </div>
 
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script src="app.js"></script>
-  </body>
-  </html>
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
 
-
+    <script type="module" src="app.js"></script>
+</body>
+</html>
